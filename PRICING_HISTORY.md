@@ -1,5 +1,20 @@
 # Pricing History — Shopify Connector
 
+## 2026-08-22 — повторное подтверждение цены и отправка на ревью
+
+При `update_pricing` с полной картой из `tool-prices.json` первый вызов
+вернул `'connect_shopify'/'disconnect_shopify'/'list_connections'
+unexpectedly still priced` — тот же паттерн, что пойман в этот день на
+Salesforce/Klaviyo/HubSpot/Webflow/MuleSoft (задача #2275 в трекере
+Imperal Cloud: транзиентное расхождение именно по `free_tools`,
+устраняется немедленным повтором идентичного payload). В отличие от тех
+пяти приложений, `shopify-connector` НЕ вернул ошибку "is live, pricing
+can't change mid-flight" — значит на момент этой попытки он ещё не был
+live, `suspend_app` не потребовался. Второй вызов прошёл без ошибки, цена
+подтверждена сохранённой. `deploy_app` → 20/21 (commit ddaa9ec7) →
+`submit_for_review` → статус `pending_review`.
+
+
 Обязательный журнал: каждое выставление или изменение цен на функции этого
 приложения фиксируется здесь — что изменилось, почему, и на основании
 чего. Не переписывать прошлые записи — только дописывать новые сверху.
