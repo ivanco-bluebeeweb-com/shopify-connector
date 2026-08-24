@@ -7,6 +7,7 @@ schemas.py, following the same shape as MuleSoft Connector's handlers.py.
 from __future__ import annotations
 
 import json
+from decimal import Decimal as _Decimal, InvalidOperation as _DecimalInvalidOperation
 import uuid
 
 from imperal_sdk import ActionResult
@@ -2106,7 +2107,13 @@ async def get_store_summary(ctx, params: GetStoreSummaryParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     recent = data.get("recentOrders", {}).get("edges") or []
-    revenue = sum(float((e["node"].get("totalPriceSet", {}).get("shopMoney", {}) or {}).get("amount", 0) or 0) for e in recent)
+    # Decimal, not float, to avoid accumulated rounding error when summing money
+    # across up to 250 orders (task #2374 -- Stripe's own int-cents pattern is
+    # the portfolio reference; Decimal is the equivalent for a display string here).
+    revenue = sum(
+        (_Decimal(str((e["node"].get("totalPriceSet", {}).get("shopMoney", {}) or {}).get("amount", 0) or 0)) for e in recent),
+        _Decimal("0"),
+    )
     currency = ""
     if recent:
         currency = (recent[0]["node"].get("totalPriceSet", {}).get("shopMoney", {}) or {}).get("currencyCode", "")
