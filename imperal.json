@@ -1,6 +1,6 @@
 {
   "manifest_schema_version": 3,
-  "sdk_version": "5.9.12",
+  "sdk_version": "5.11.0",
   "app_id": "shopify-connector",
   "version": "0.1.0",
   "name": "Shopify",
@@ -7704,11 +7704,74 @@
       "rotation_hint_days": 180
     }
   ],
+  "panels": [
+    {
+      "panel_id": "secrets",
+      "slot": "right",
+      "title": "Secrets",
+      "tree": {},
+      "icon": "KeyRound",
+      "refresh": "manual",
+      "center_overlay": false
+    },
+    {
+      "panel_id": "shopify_connect",
+      "slot": "left",
+      "title": "Shopify",
+      "tree": {},
+      "icon": "🛍️",
+      "refresh": "manual",
+      "center_overlay": false,
+      "default_width": 320,
+      "min_width": 260,
+      "max_width": 420
+    },
+    {
+      "panel_id": "shopify_connect_help",
+      "slot": "center",
+      "title": "How to connect Shopify",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "shopify_center",
+      "slot": "center",
+      "title": "Shopify",
+      "tree": {},
+      "icon": "🛍️",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "shopify_cancel_confirm",
+      "slot": "center",
+      "title": "",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "shopify_settings",
+      "slot": "center",
+      "title": "",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": false
+    }
+  ],
   "pricing": {
     "model": "per_action",
     "currency": "tokens",
     "monthly_price": 0,
-    "free_tools": ["connect_shopify", "disconnect_shopify", "list_connections"],
+    "free_tools": [
+      "connect_shopify",
+      "disconnect_shopify",
+      "list_connections"
+    ],
     "tool_prices": {
       "connect_shopify": 0,
       "disconnect_shopify": 0,
@@ -7762,55 +7825,5 @@
       "get_store_summary": 40
     },
     "notes": "Fixed platform scale {0,8,16,20,40,60} per canonical PRICING_POLICY.md. Not a Google-backed app, no x1.8 markup."
-  },
-  "panels": [
-    {
-      "panel_id": "secrets",
-      "slot": "right",
-      "title": "Secrets",
-      "tree": {},
-      "icon": "KeyRound",
-      "refresh": "manual",
-      "center_overlay": false
-    },
-    {
-      "panel_id": "shopify_connect",
-      "slot": "left",
-      "title": "Shopify",
-      "tree": {},
-      "icon": "🛍️",
-      "refresh": "manual",
-      "center_overlay": false,
-      "default_width": 320,
-      "min_width": 260,
-      "max_width": 420
-    },
-    {
-      "panel_id": "shopify_connect_help",
-      "slot": "center",
-      "title": "How to connect Shopify",
-      "tree": {},
-      "icon": "",
-      "refresh": "manual",
-      "center_overlay": true
-    },
-    {
-      "panel_id": "shopify_center",
-      "slot": "center",
-      "title": "Shopify",
-      "tree": {},
-      "icon": "🛍️",
-      "refresh": "manual",
-      "center_overlay": true
-    },
-    {
-      "panel_id": "shopify_settings",
-      "slot": "center",
-      "title": "",
-      "tree": {},
-      "icon": "",
-      "refresh": "manual",
-      "center_overlay": false
-    }
-  ]
+  }
 }
