@@ -221,7 +221,7 @@ async def _orders_dashboard(ctx) -> ui.UINode:
         return ui.Stack(direction="v", gap=4, children=[
             *([ui.Stats(children=stats)] if stats else []),
             ui.Error(message=orders_result.error or "Could not load orders.",
-                     on_retry=ui.Call("__panel__shopify_center")),
+                     retry=ui.Call("__panel__shopify_center")),
         ])
 
     orders = orders_result.data.items if orders_result.data else []
@@ -256,7 +256,7 @@ async def _order_detail(ctx, order_id: str) -> ui.UINode:
     if not result.success or not result.data:
         return ui.Error(
             message=result.error or "Could not load this order.",
-            on_retry=ui.Call("__panel__shopify_center"),
+            retry=ui.Call("__panel__shopify_center"),
         )
     o = result.data
     items_columns = [
