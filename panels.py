@@ -124,6 +124,9 @@ async def shopify_connect_panel(ctx, **kwargs) -> object:
         _connections_section(connections),
         *summary_rows,
         ui.Divider(),
+        ui.Button("View orders", variant="primary", size="sm", full_width=True,
+                  icon="ShoppingCart", on_click=ui.Call("__panel__shopify_center")),
+        ui.Divider(),
         _connect_section(),
         ui.Divider(),
         _settings_button(),
@@ -165,16 +168,138 @@ async def shopify_connect_help(ctx, **kwargs) -> object:
     )
 
 
+_ORDER_STATUS_COLOR = {
+    "PAID": "green", "PARTIALLY_PAID": "yellow", "PENDING": "yellow",
+    "REFUNDED": "gray", "VOIDED": "red", "FULFILLED": "green",
+    "UNFULFILLED": "yellow", "PARTIALLY_FULFILLED": "yellow",
+}
+
+
+def _order_row(o) -> dict:
+    return {
+        "name": o.name, "email": o.email or "—",
+        "total": f"{o.total_price} {o.currency}".strip(),
+        "financial_status": o.financial_status or "—",
+        "fulfillment_status": o.fulfillment_status or "—",
+        "created_at": (o.created_at or "")[:10],
+        "order_id": o.id,
+    }
+
+
 @ext.panel("shopify_center", slot="center", title="Shopify", icon="🛍️", center_overlay=True)
-async def shopify_center_panel(ctx, **kwargs) -> object:
-    """Base center panel -- per UI_INTERFACE_STANDARD.md (2026-08-20).
-    This app has no list/detail content of its own to show in the center
-    by default (everything lives in the sidebar). MUST carry
-    center_overlay=True: per docs.imperal.io/en/concepts/panels, a plain
-    slot="center" panel is registered but the Panel app never fetches it
-    at session-init without that flag. Text is the shared canonical
-    wording -- must stay identical across every app in this situation."""
-    return ui.Empty(
-        message="Nothing to show here -- this app is managed entirely from the sidebar.",
-        icon="👈",
+async def shopify_center_panel(ctx, order_id: str = "", **kwargs) -> object:
+    """Post-connect main screen: Orders Dashboard, or Order Detail when
+    `order_id` is passed (master-detail via the same panel_id, per
+    UI_COMPONENT_VOCABULARY.md §3). Falls back to the connect prompt if
+    no store is connected yet."""
+    connections = await h._load_connections(ctx)
+    if not connections:
+        return ui.Empty(
+            message="Connect a Shopify store from the sidebar to see your orders here.",
+            icon="🛍️",
+        )
+
+    if order_id:
+        return await _order_detail(ctx, order_id)
+    return await _orders_dashboard(ctx)
+
+
+async def _orders_dashboard(ctx) -> ui.UINode:
+    summary_result = await h.get_store_summary(ctx, h.GetStoreSummaryParams())
+    stats: list[ui.UINode] = []
+    if summary_result.success and summary_result.data:
+        s = summary_result.data
+        stats = [
+            ui.Stat(label="Open orders", value=str(s.open_orders_count)),
+            ui.Stat(label="Orders (30d)", value=str(s.orders_count_last_30d)),
+            ui.Stat(label="Revenue (30d)", value=s.revenue_last_30d or "—"),
+            ui.Stat(label="Customers", value=str(s.customers_count)),
+        ]
+
+    orders_result = await h.list_orders(ctx, h.ListOrdersParams(limit=50))
+    if not orders_result.success:
+        return ui.Stack(direction="v", gap=4, children=[
+            *([ui.Stats(children=stats)] if stats else []),
+            ui.Error(message=orders_result.error or "Could not load orders.",
+                     on_retry=ui.Call("__panel__shopify_center")),
+        ])
+
+    orders = orders_result.data.items if orders_result.data else []
+    if not orders:
+        return ui.Stack(direction="v", gap=4, children=[
+            *([ui.Stats(children=stats)] if stats else []),
+            ui.Empty(message="No orders yet -- they will appear here as customers check out.", icon="🧾"),
+        ])
+
+    columns = [
+        ui.DataColumn("name", "Order", sortable=True),
+        ui.DataColumn("email", "Customer", sortable=True),
+        ui.DataColumn("total", "Total", sortable=True),
+        ui.DataColumn("financial_status", "Payment", sortable=True),
+        ui.DataColumn("fulfillment_status", "Fulfillment", sortable=True),
+        ui.DataColumn("created_at", "Date", sortable=True),
+    ]
+    table = ui.DataTable(
+        columns=columns,
+        rows=[_order_row(o) for o in orders],
+        on_row_click=ui.Call("__panel__shopify_center", order_id=""),
+    )
+    return ui.Stack(direction="v", gap=4, children=[
+        ui.Header(text="Orders", level=2),
+        *([ui.Stats(children=stats)] if stats else []),
+        table,
+    ])
+
+
+async def _order_detail(ctx, order_id: str) -> ui.UINode:
+    result = await h.get_order(ctx, h.GetOrderParams(order_id=order_id))
+    if not result.success or not result.data:
+        return ui.Error(
+            message=result.error or "Could not load this order.",
+            on_retry=ui.Call("__panel__shopify_center"),
+        )
+    o = result.data
+    items_columns = [
+        ui.DataColumn("title", "Product", sortable=False),
+        ui.DataColumn("quantity", "Qty", sortable=False),
+        ui.DataColumn("price", "Price", sortable=False),
+    ]
+    items_rows = [
+        {"title": li.title, "quantity": str(li.quantity), "price": li.price}
+        for li in (o.line_items or [])
+    ]
+    return ui.Stack(direction="v", gap=4, children=[
+        ui.Button("← Back to orders", variant="ghost", size="sm",
+                  on_click=ui.Call("__panel__shopify_center")),
+        ui.Header(text=o.name, level=2,
+                  subtitle=f"{o.total_price} {o.currency}".strip()),
+        ui.KeyValue(items=[
+            {"key": "Customer", "value": o.email or "—"},
+            {"key": "Payment status", "value": o.financial_status or "—"},
+            {"key": "Fulfillment status", "value": o.fulfillment_status or "—"},
+            {"key": "Placed", "value": (o.created_at or "")[:10]},
+        ]),
+        ui.Text("Line items", variant="heading"),
+        ui.DataTable(columns=items_columns, rows=items_rows) if items_rows
+        else ui.Text("No line items on this order.", variant="caption"),
+        ui.Row(children=[
+            ui.Button("Cancel order", variant="destructive", size="sm",
+                      on_click=ui.Call("__panel__shopify_cancel_confirm", order_id=o.id)),
+        ]),
+    ])
+
+
+@ext.panel("shopify_cancel_confirm", slot="center", center_overlay=True)
+async def shopify_cancel_confirm(ctx, order_id: str = "", **kwargs) -> object:
+    """Destructive/financial action -- must go through an explicit Dialog
+    per UI_INTERFACE_STANDARD.md, never a direct one-click button action."""
+    return ui.Dialog(
+        title="Cancel this order?",
+        content=ui.Text(
+            "This cancels the order in Shopify. Depending on your store's "
+            "settings this may restock inventory and notify the customer. "
+            "This cannot be undone from here."),
+        confirm_label="Cancel order",
+        cancel_label="Keep order",
+        on_confirm=ui.Call("cancel_order", order_id=order_id),
     )
