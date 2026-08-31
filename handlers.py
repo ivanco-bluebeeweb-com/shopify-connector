@@ -134,7 +134,7 @@ async def connect_shopify(ctx, params: ConnectShopifyParams) -> ActionResult:
         "label": params.label or shop_name,
     })
     await _save_connections(ctx, connections)
-    return ActionResult.ok(ProviderConnection(
+    return ActionResult.success(ProviderConnection(
         id=conn_id, title=params.label or shop_name, connected=True,
         detail=shop_domain, shop_domain=shop_domain,
     ), summary=f"Connected Shopify store '{shop_name}' ({shop_domain}).")
@@ -156,7 +156,7 @@ async def disconnect_shopify(ctx, params: DisconnectShopifyParams) -> ActionResu
     if len(remaining) == len(connections):
         return ActionResult.error(f"No connection with id '{params.connection_id}'.", code="not_found")
     await _save_connections(ctx, remaining)
-    return ActionResult.ok(DeleteResult(deleted=True, id=params.connection_id), summary="Store disconnected.")
+    return ActionResult.success(DeleteResult(deleted=True, id=params.connection_id), summary="Store disconnected.")
 
 
 @chat.function(
@@ -171,7 +171,7 @@ async def list_connections(ctx, params: ListConnectionsParams) -> ActionResult:
     """List saved store connections."""
     connections = await _load_connections(ctx)
     items = [_conn_to_entity(c) for c in connections]
-    return ActionResult.ok(ProviderConnectionList(items=items), summary=f"{len(items)} store(s) connected.")
+    return ActionResult.success(ProviderConnectionList(items=items), summary=f"{len(items)} store(s) connected.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ async def list_products(ctx, params: ListProductsParams) -> ActionResult:
     conn_data = data.get("products", {})
     items = [_product_to_entity(e["node"]) for e in conn_data.get("edges", [])]
     page = conn_data.get("pageInfo", {})
-    return ActionResult.ok(
+    return ActionResult.success(
         ProductList(items=items, has_next_page=page.get("hasNextPage", False), end_cursor=page.get("endCursor", "")),
         summary=f"{len(items)} product(s).",
     )
@@ -271,7 +271,7 @@ async def get_product(ctx, params: GetProductParams) -> ActionResult:
     node = data.get("product")
     if not node:
         return ActionResult.error(f"No product with id '{params.product_id}'.", code="not_found")
-    return ActionResult.ok(_product_to_entity(node), summary=f"Product '{node.get('title', '')}'.")
+    return ActionResult.success(_product_to_entity(node), summary=f"Product '{node.get('title', '')}'.")
 
 
 @chat.function(
@@ -307,7 +307,7 @@ async def create_product(ctx, params: CreateProductParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     node = data["productCreate"]["product"]
-    return ActionResult.ok(_product_to_entity(node), summary=f"Created product '{node.get('title', '')}'.")
+    return ActionResult.success(_product_to_entity(node), summary=f"Created product '{node.get('title', '')}'.")
 
 
 @chat.function(
@@ -351,7 +351,7 @@ async def update_product(ctx, params: UpdateProductParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     node = data["productUpdate"]["product"]
-    return ActionResult.ok(_product_to_entity(node), summary=f"Updated product '{node.get('title', '')}'.")
+    return ActionResult.success(_product_to_entity(node), summary=f"Updated product '{node.get('title', '')}'.")
 
 
 @chat.function(
@@ -379,7 +379,7 @@ async def delete_product(ctx, params: DeleteProductParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     deleted_id = data["productDelete"].get("deletedProductId", params.product_id)
-    return ActionResult.ok(DeleteResult(deleted=True, id=deleted_id), summary="Product deleted.")
+    return ActionResult.success(DeleteResult(deleted=True, id=deleted_id), summary="Product deleted.")
 
 
 @chat.function(
@@ -421,7 +421,7 @@ async def create_product_variant(ctx, params: CreateProductVariantParams) -> Act
     variants = data["productVariantsBulkCreate"].get("productVariants") or []
     if not variants:
         return ActionResult.error("Shopify did not return the created variant.", code="empty_response")
-    return ActionResult.ok(_variant_to_entity(variants[0]), summary="Variant created.")
+    return ActionResult.success(_variant_to_entity(variants[0]), summary="Variant created.")
 
 
 @chat.function(
@@ -473,7 +473,7 @@ async def update_product_variant(ctx, params: UpdateProductVariantParams) -> Act
     variants = data["productVariantsBulkUpdate"].get("productVariants") or []
     if not variants:
         return ActionResult.error("Shopify did not return the updated variant.", code="empty_response")
-    return ActionResult.ok(_variant_to_entity(variants[0]), summary="Variant updated.")
+    return ActionResult.success(_variant_to_entity(variants[0]), summary="Variant updated.")
 
 
 @chat.function(
@@ -504,7 +504,7 @@ async def delete_product_variant(ctx, params: DeleteProductVariantParams) -> Act
         sc.raise_for_user_errors(data, "productVariantsBulkDelete")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(DeleteResult(deleted=True, id=params.variant_id), summary="Variant deleted.")
+    return ActionResult.success(DeleteResult(deleted=True, id=params.variant_id), summary="Variant deleted.")
 
 
 @chat.function(
@@ -537,7 +537,7 @@ async def upload_product_media(ctx, params: UploadProductMediaParams) -> ActionR
         sc.raise_for_user_errors(data, "productCreateMedia", error_field="mediaUserErrors")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary="Image attached to product media.")
+    return ActionResult.success(summary="Image attached to product media.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -583,7 +583,7 @@ async def list_collections(ctx, params: ListCollectionsParams) -> ActionResult:
     conns = data.get("collections", {})
     items = [_collection_to_entity(e["node"]) for e in conns.get("edges", [])]
     page_info = conns.get("pageInfo", {})
-    return ActionResult.ok(
+    return ActionResult.success(
         CollectionList(items=items, has_next_page=page_info.get("hasNextPage", False), end_cursor=page_info.get("endCursor", "")),
         summary=f"{len(items)} collection(s).",
     )
@@ -626,7 +626,7 @@ async def create_collection(ctx, params: CreateCollectionParams) -> ActionResult
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     node = data["collectionCreate"]["collection"]
-    return ActionResult.ok(_collection_to_entity(node), summary=f"Collection '{node.get('title', '')}' created.")
+    return ActionResult.success(_collection_to_entity(node), summary=f"Collection '{node.get('title', '')}' created.")
 
 
 @chat.function(
@@ -658,7 +658,7 @@ async def add_products_to_collection(ctx, params: AddProductsToCollectionParams)
         sc.raise_for_user_errors(data, "collectionAddProducts")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary=f"Added {len(params.product_ids)} product(s) to collection.")
+    return ActionResult.success(summary=f"Added {len(params.product_ids)} product(s) to collection.")
 
 
 @chat.function(
@@ -690,7 +690,7 @@ async def remove_products_from_collection(ctx, params: RemoveProductsFromCollect
         sc.raise_for_user_errors(data, "collectionRemoveProducts")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary=f"Removing {len(params.product_ids)} product(s) from collection (async job).")
+    return ActionResult.success(summary=f"Removing {len(params.product_ids)} product(s) from collection (async job).")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -761,7 +761,7 @@ async def list_orders(ctx, params: ListOrdersParams) -> ActionResult:
     conn_data = data.get("orders", {})
     items = [_order_to_entity(e["node"]) for e in (conn_data.get("edges") or [])]
     page_info = conn_data.get("pageInfo", {})
-    return ActionResult.ok(OrderList(
+    return ActionResult.success(OrderList(
         items=items, has_next_page=page_info.get("hasNextPage", False),
         end_cursor=page_info.get("endCursor", "") or "",
     ), summary=f"{len(items)} order(s).")
@@ -788,7 +788,7 @@ async def get_order(ctx, params: GetOrderParams) -> ActionResult:
     order = data.get("order")
     if not order:
         return ActionResult.error("Order not found.", code="not_found")
-    return ActionResult.ok(_order_to_entity(order), summary=f"Order '{order.get('name', '')}' loaded.")
+    return ActionResult.success(_order_to_entity(order), summary=f"Order '{order.get('name', '')}' loaded.")
 
 
 @chat.function(
@@ -821,7 +821,7 @@ async def cancel_order(ctx, params: CancelOrderParams) -> ActionResult:
         sc.raise_for_user_errors(data, "orderCancel")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary="Order cancellation queued.")
+    return ActionResult.success(summary="Order cancellation queued.")
 
 
 @chat.function(
@@ -852,7 +852,7 @@ async def update_order_note(ctx, params: UpdateOrderNoteParams) -> ActionResult:
         sc.raise_for_user_errors(data, "orderUpdate")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary="Order note updated.")
+    return ActionResult.success(summary="Order note updated.")
 
 
 @chat.function(
@@ -904,7 +904,7 @@ async def create_draft_order(ctx, params: CreateDraftOrderParams) -> ActionResul
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     d = data["draftOrderCreate"]["draftOrder"]
-    return ActionResult.ok(Order(
+    return ActionResult.success(Order(
         id=d.get("id", ""), name=d.get("name", ""), email=d.get("email", "") or "",
         total_price=str((d.get("totalPriceSet", {}).get("shopMoney", {}) or {}).get("amount", "")),
         currency=(d.get("totalPriceSet", {}).get("shopMoney", {}) or {}).get("currencyCode", ""),
@@ -939,7 +939,7 @@ async def complete_draft_order(ctx, params: CompleteDraftOrderParams) -> ActionR
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     order = (data["draftOrderComplete"]["draftOrder"] or {}).get("order") or {}
-    return ActionResult.ok(Order(
+    return ActionResult.success(Order(
         id=order.get("id", ""), name=order.get("name", ""),
         financial_status=order.get("displayFinancialStatus", "") or "",
     ), summary=f"Draft order completed as '{order.get('name', '')}'.")
@@ -975,7 +975,7 @@ async def cancel_order(ctx, params: CancelOrderParams) -> ActionResult:
         sc.raise_for_user_errors(data, "orderCancel")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary="Order cancellation started (async job).")
+    return ActionResult.success(summary="Order cancellation started (async job).")
 
 
 @chat.function(
@@ -1004,7 +1004,7 @@ async def update_order_note(ctx, params: UpdateOrderNoteParams) -> ActionResult:
         sc.raise_for_user_errors(data, "orderUpdate")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary="Order note updated.")
+    return ActionResult.success(summary="Order note updated.")
 
 
 @chat.function(
@@ -1040,7 +1040,7 @@ async def refund_order(ctx, params: RefundOrderParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     refund = data["refundCreate"].get("refund") or {}
-    return ActionResult.ok(summary=f"Refund created ({refund.get('id', '')}).")
+    return ActionResult.success(summary=f"Refund created ({refund.get('id', '')}).")
 
 
 @chat.function(
@@ -1074,7 +1074,7 @@ async def list_fulfillment_orders(ctx, params: ListFulfillmentOrdersParams) -> A
         FulfillmentOrderRef(id=e["node"]["id"], status=e["node"]["status"], order_id=params.order_id)
         for e in (order.get("fulfillmentOrders", {}).get("edges") or [])
     ]
-    return ActionResult.ok(FulfillmentOrderList(items=items), summary=f"{len(items)} fulfillment order(s).")
+    return ActionResult.success(FulfillmentOrderList(items=items), summary=f"{len(items)} fulfillment order(s).")
 
 
 @chat.function(
@@ -1118,7 +1118,7 @@ async def create_fulfillment(ctx, params: CreateFulfillmentParams) -> ActionResu
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     f = data["fulfillmentCreate"].get("fulfillment") or {}
-    return ActionResult.ok(summary=f"Fulfillment created (status: {f.get('status', '')}).")
+    return ActionResult.success(summary=f"Fulfillment created (status: {f.get('status', '')}).")
 
 
 @chat.function(
@@ -1145,7 +1145,7 @@ async def cancel_fulfillment(ctx, params: CancelFulfillmentParams) -> ActionResu
         sc.raise_for_user_errors(data, "fulfillmentCancel")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary="Fulfillment cancelled.")
+    return ActionResult.success(summary="Fulfillment cancelled.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -1199,7 +1199,7 @@ async def list_customers(ctx, params: ListCustomersParams) -> ActionResult:
     conn_data = data.get("customers", {})
     items = [_customer_to_entity(e["node"]) for e in (conn_data.get("edges") or [])]
     page_info = conn_data.get("pageInfo", {})
-    return ActionResult.ok(CustomerList(
+    return ActionResult.success(CustomerList(
         items=items, has_next_page=page_info.get("hasNextPage", False),
         end_cursor=page_info.get("endCursor", "") or "",
     ), summary=f"{len(items)} customer(s).")
@@ -1226,7 +1226,7 @@ async def get_customer(ctx, params: GetCustomerParams) -> ActionResult:
     node = data.get("customer")
     if not node:
         return ActionResult.error(f"No customer with id '{params.customer_id}'.", code="not_found")
-    return ActionResult.ok(_customer_to_entity(node))
+    return ActionResult.success(_customer_to_entity(node)), summary="Customer retrieved."
 
 
 @chat.function(
@@ -1268,7 +1268,7 @@ async def create_customer(ctx, params: CreateCustomerParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     node = data["customerCreate"]["customer"]
-    return ActionResult.ok(_customer_to_entity(node), summary=f"Customer '{node.get('email', '')}' created.")
+    return ActionResult.success(_customer_to_entity(node), summary=f"Customer '{node.get('email', '')}' created.")
 
 
 @chat.function(
@@ -1310,7 +1310,7 @@ async def update_customer(ctx, params: UpdateCustomerParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     node = data["customerUpdate"]["customer"]
-    return ActionResult.ok(_customer_to_entity(node), summary="Customer updated.")
+    return ActionResult.success(_customer_to_entity(node), summary="Customer updated.")
 
 
 @chat.function(
@@ -1338,7 +1338,7 @@ async def delete_customer(ctx, params: DeleteCustomerParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     deleted_id = data["customerDelete"].get("deletedCustomerId", params.customer_id)
-    return ActionResult.ok(DeleteResult(deleted=True, id=deleted_id), summary="Customer deleted.")
+    return ActionResult.success(DeleteResult(deleted=True, id=deleted_id), summary="Customer deleted.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -1378,7 +1378,7 @@ async def list_locations(ctx, params: ListLocationsParams) -> ActionResult:
         )
         for e in (data.get("locations", {}).get("edges") or [])
     ]
-    return ActionResult.ok(LocationList(items=items), summary=f"{len(items)} location(s).")
+    return ActionResult.success(LocationList(items=items), summary=f"{len(items)} location(s).")
 
 
 @chat.function(
@@ -1417,7 +1417,7 @@ async def get_inventory_levels(ctx, params: GetInventoryLevelsParams) -> ActionR
             location_id=(node.get("location") or {}).get("id", ""),
             available=qty,
         ))
-    return ActionResult.ok(InventoryLevelList(items=items), summary=f"{len(items)} location level(s).")
+    return ActionResult.success(InventoryLevelList(items=items), summary=f"{len(items)} location level(s).")
 
 
 @chat.function(
@@ -1457,7 +1457,7 @@ async def set_inventory_quantity(ctx, params: SetInventoryQuantityParams) -> Act
         sc.raise_for_user_errors(data, "inventorySetQuantities")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary=f"Inventory set to {params.quantity}.")
+    return ActionResult.success(summary=f"Inventory set to {params.quantity}.")
 
 
 @chat.function(
@@ -1496,7 +1496,7 @@ async def adjust_inventory_quantity(ctx, params: AdjustInventoryQuantityParams) 
         sc.raise_for_user_errors(data, "inventoryAdjustQuantities")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(summary=f"Inventory adjusted by {params.delta:+d}.")
+    return ActionResult.success(summary=f"Inventory adjusted by {params.delta:+d}.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -1547,7 +1547,7 @@ async def list_discounts(ctx, params: ListDiscountsParams) -> ActionResult:
             kind=d.get("__typename", ""),
             code=(codes[0]["node"]["code"] if codes else ""),
         ))
-    return ActionResult.ok(DiscountList(items=items), summary=f"{len(items)} discount(s).")
+    return ActionResult.success(DiscountList(items=items), summary=f"{len(items)} discount(s).")
 
 
 @chat.function(
@@ -1599,7 +1599,7 @@ async def create_code_discount(ctx, params: CreateCodeDiscountParams) -> ActionR
     node = data["discountCodeBasicCreate"].get("codeDiscountNode") or {}
     d = (node.get("codeDiscount") or {})
     codes = d.get("codes", {}).get("edges") or []
-    return ActionResult.ok(Discount(
+    return ActionResult.success(Discount(
         id=node.get("id", ""), title=d.get("title", "") or "", status=d.get("status", "") or "",
         kind="DiscountCodeBasic", code=(codes[0]["node"]["code"] if codes else params.code),
     ), summary=f"Discount code '{params.code}' created.")
@@ -1646,7 +1646,7 @@ async def create_automatic_discount(ctx, params: CreateAutomaticDiscountParams) 
         return ActionResult.error(str(e), code=e.code)
     node = data["discountAutomaticBasicCreate"].get("automaticDiscountNode") or {}
     d = (node.get("automaticDiscount") or {})
-    return ActionResult.ok(Discount(
+    return ActionResult.success(Discount(
         id=node.get("id", ""), title=d.get("title", "") or "", status=d.get("status", "") or "",
         kind="DiscountAutomaticBasic", code="",
     ), summary=f"Automatic discount '{params.title}' created.")
@@ -1676,7 +1676,7 @@ async def delete_discount(ctx, params: DeleteDiscountParams) -> ActionResult:
         sc.raise_for_user_errors(data, "discountCodeDelete")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(DeleteResult(deleted=True, id=params.discount_id), summary="Discount deleted.")
+    return ActionResult.success(DeleteResult(deleted=True, id=params.discount_id), summary="Discount deleted.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -1718,7 +1718,7 @@ async def list_metafields(ctx, params: ListMetafieldsParams) -> ActionResult:
                   value=e["node"]["value"], type=e["node"]["type"])
         for e in (node.get("metafields", {}).get("edges") or [])
     ]
-    return ActionResult.ok(MetafieldList(items=items), summary=f"{len(items)} metafield(s).")
+    return ActionResult.success(MetafieldList(items=items), summary=f"{len(items)} metafield(s).")
 
 
 @chat.function(
@@ -1757,7 +1757,7 @@ async def set_metafield(ctx, params: SetMetafieldParams) -> ActionResult:
     if not mfs:
         return ActionResult.error("Shopify did not return the set metafield.", code="empty_response")
     m = mfs[0]
-    return ActionResult.ok(Metafield(id=m["id"], namespace=m["namespace"], key=m["key"], value=m["value"], type=m["type"]),
+    return ActionResult.success(Metafield(id=m["id"], namespace=m["namespace"], key=m["key"], value=m["value"], type=m["type"]),
                             summary=f"Metafield '{m['namespace']}.{m['key']}' set.")
 
 
@@ -1785,7 +1785,7 @@ async def delete_metafield(ctx, params: DeleteMetafieldParams) -> ActionResult:
         sc.raise_for_user_errors(data, "metafieldDelete")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(DeleteResult(deleted=True, id=params.metafield_id), summary="Metafield deleted.")
+    return ActionResult.success(DeleteResult(deleted=True, id=params.metafield_id), summary="Metafield deleted.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -1827,7 +1827,7 @@ async def list_webhooks(ctx, params: ListWebhooksParams) -> ActionResult:
         n = e["node"]
         ep = n.get("endpoint") or {}
         items.append(WebhookSubscription(id=n["id"], topic=n["topic"], callback_url=ep.get("callbackUrl", "") or ""))
-    return ActionResult.ok(WebhookList(items=items), summary=f"{len(items)} webhook subscription(s).")
+    return ActionResult.success(WebhookList(items=items), summary=f"{len(items)} webhook subscription(s).")
 
 
 @chat.function(
@@ -1861,7 +1861,7 @@ async def create_webhook(ctx, params: CreateWebhookParams) -> ActionResult:
         return ActionResult.error(str(e), code=e.code)
     n = data["webhookSubscriptionCreate"].get("webhookSubscription") or {}
     ep = n.get("endpoint") or {}
-    return ActionResult.ok(
+    return ActionResult.success(
         WebhookSubscription(id=n.get("id", ""), topic=n.get("topic", ""), callback_url=ep.get("callbackUrl", "") or ""),
         summary=f"Webhook subscribed to '{n.get('topic', '')}'.",
     )
@@ -1891,7 +1891,7 @@ async def delete_webhook(ctx, params: DeleteWebhookParams) -> ActionResult:
         sc.raise_for_user_errors(data, "webhookSubscriptionDelete")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(DeleteResult(deleted=True, id=params.webhook_id), summary="Webhook subscription deleted.")
+    return ActionResult.success(DeleteResult(deleted=True, id=params.webhook_id), summary="Webhook subscription deleted.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -1927,7 +1927,7 @@ async def run_bulk_query(ctx, params: RunBulkQueryParams) -> ActionResult:
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     op = data["bulkOperationRunQuery"].get("bulkOperation") or {}
-    return ActionResult.ok(BulkOperationStatus(id=op.get("id", ""), status=op.get("status", "")),
+    return ActionResult.success(BulkOperationStatus(id=op.get("id", ""), status=op.get("status", "")),
                             summary="Bulk query started -- check status with get_bulk_operation_status.")
 
 
@@ -1956,7 +1956,7 @@ async def get_bulk_operation_status(ctx, params: GetBulkOperationStatusParams) -
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     op = data.get("currentBulkOperation") or {}
-    return ActionResult.ok(BulkOperationStatus(
+    return ActionResult.success(BulkOperationStatus(
         id=op.get("id", ""), status=op.get("status", ""), error_code=op.get("errorCode", "") or "",
         object_count=int(op.get("objectCount", 0) or 0), url=op.get("url", "") or "",
     ), summary=f"Bulk operation status: {op.get('status', 'UNKNOWN')}.")
@@ -1990,7 +1990,7 @@ async def cancel_bulk_operation(ctx, params: CancelBulkOperationParams) -> Actio
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
     op = data["bulkOperationCancel"].get("bulkOperation") or {}
-    return ActionResult.ok(BulkOperationStatus(id=op.get("id", ""), status=op.get("status", "")),
+    return ActionResult.success(BulkOperationStatus(id=op.get("id", ""), status=op.get("status", "")),
                             summary="Bulk operation cancellation requested.")
 
 
@@ -2072,7 +2072,7 @@ async def get_low_stock_report(ctx, params: GetLowStockReportParams) -> ActionRe
             after = page_info.get("endCursor")
     except sc.ClientFail as e:
         return ActionResult.error(str(e), code=e.code)
-    return ActionResult.ok(LowStockReport(rows=rows, threshold=params.threshold),
+    return ActionResult.success(LowStockReport(rows=rows, threshold=params.threshold),
                             summary=f"{len(rows)} variant/location combo(s) at or below {params.threshold} units.")
 
 
@@ -2124,4 +2124,4 @@ async def get_store_summary(ctx, params: GetStoreSummaryParams) -> ActionResult:
         customers_count=len(data.get("customersCount", {}).get("edges") or []),
         open_orders_count=len(data.get("openOrders", {}).get("edges") or []),
     )
-    return ActionResult.ok(summary, summary=f"{summary.orders_count_last_30d} orders / {summary.revenue_last_30d} in the last 30 days.")
+    return ActionResult.success(summary, summary=f"{summary.orders_count_last_30d} orders / {summary.revenue_last_30d} in the last 30 days.")
