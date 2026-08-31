@@ -40,6 +40,8 @@ class ProviderConnection(sdl.Entity):
 
 
 class ProviderConnectionList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[ProviderConnection] = []
 
 
@@ -48,6 +50,7 @@ class DisconnectShopifyParams(BaseModel):
 
 
 class DeleteResult(sdl.Entity):
+    title: str = ""
     deleted: bool = False
     id: str = ""
 
@@ -92,6 +95,8 @@ class Product(sdl.Entity):
 
 
 class ProductList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Product] = []
     has_next_page: bool = False
     end_cursor: str = ""
@@ -165,6 +170,8 @@ class Collection(sdl.Entity):
 
 
 class CollectionList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Collection] = []
     has_next_page: bool = False
     end_cursor: str = ""
@@ -205,6 +212,7 @@ class OrderLineItem(sdl.Entity):
 
 
 class Order(sdl.Entity):
+    title: str = ""
     id: str = ""
     name: str = ""
     email: str = ""
@@ -218,6 +226,8 @@ class Order(sdl.Entity):
 
 
 class OrderList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Order] = []
     has_next_page: bool = False
     end_cursor: str = ""
@@ -271,6 +281,7 @@ class RefundOrderParams(ConnParams):
 
 
 class FulfillmentOrderRef(sdl.Entity):
+    title: str = ""
     id: str = ""
     status: str = ""
     order_id: str = ""
@@ -281,6 +292,8 @@ class ListFulfillmentOrdersParams(ConnParams):
 
 
 class FulfillmentOrderList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[FulfillmentOrderRef] = []
 
 
@@ -302,6 +315,7 @@ class CancelFulfillmentParams(ConnParams):
 
 
 class Customer(sdl.Entity):
+    title: str = ""
     id: str = ""
     first_name: str = ""
     last_name: str = ""
@@ -313,6 +327,8 @@ class Customer(sdl.Entity):
 
 
 class CustomerList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Customer] = []
     has_next_page: bool = False
     end_cursor: str = ""
@@ -355,6 +371,7 @@ class DeleteCustomerParams(ConnParams):
 
 
 class Location(sdl.Entity):
+    title: str = ""
     id: str = ""
     name: str = ""
     is_active: bool = False
@@ -362,6 +379,8 @@ class Location(sdl.Entity):
 
 
 class LocationList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Location] = []
 
 
@@ -370,6 +389,8 @@ class ListLocationsParams(ConnParams):
 
 
 class InventoryLevel(sdl.Entity):
+    id: str = ""
+    title: str = ""
     inventory_item_id: str = ""
     location_id: str = ""
     available: int = 0
@@ -380,6 +401,8 @@ class GetInventoryLevelsParams(ConnParams):
 
 
 class InventoryLevelList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[InventoryLevel] = []
 
 
@@ -409,6 +432,8 @@ class Discount(sdl.Entity):
 
 
 class DiscountList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Discount] = []
 
 
@@ -441,6 +466,7 @@ class DeleteDiscountParams(ConnParams):
 
 
 class Metafield(sdl.Entity):
+    title: str = ""
     id: str = ""
     namespace: str = ""
     key: str = ""
@@ -449,6 +475,8 @@ class Metafield(sdl.Entity):
 
 
 class MetafieldList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[Metafield] = []
 
 
@@ -474,6 +502,7 @@ class DeleteMetafieldParams(ConnParams):
 
 
 class WebhookSubscription(sdl.Entity):
+    title: str = ""
     id: str = ""
     topic: str = ""
     callback_url: str = ""
@@ -481,6 +510,8 @@ class WebhookSubscription(sdl.Entity):
 
 
 class WebhookList(sdl.Entity):
+    id: str = ""
+    title: str = ""
     items: list[WebhookSubscription] = []
 
 
@@ -507,6 +538,7 @@ class RunBulkQueryParams(ConnParams):
 
 
 class BulkOperationStatus(sdl.Entity):
+    title: str = ""
     id: str = ""
     status: str = ""
     object_count: int = 0
@@ -528,6 +560,8 @@ class CancelBulkOperationParams(ConnParams):
 
 
 class LowStockRow(sdl.Entity):
+    id: str = ""
+    title: str = ""
     product_title: str = ""
     variant_title: str = ""
     sku: str = ""
@@ -536,6 +570,8 @@ class LowStockRow(sdl.Entity):
 
 
 class LowStockReport(sdl.Entity):
+    id: str = ""
+    title: str = ""
     rows: list[LowStockRow] = []
     threshold: int = 0
 
@@ -546,6 +582,8 @@ class GetLowStockReportParams(ConnParams):
 
 
 class StoreSummary(sdl.Entity):
+    id: str = ""
+    title: str = ""
     products_count: int = 0
     orders_count_last_30d: int = 0
     revenue_last_30d: str = ""
