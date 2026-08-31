@@ -1226,7 +1226,7 @@ async def get_customer(ctx, params: GetCustomerParams) -> ActionResult:
     node = data.get("customer")
     if not node:
         return ActionResult.error(f"No customer with id '{params.customer_id}'.", code="not_found")
-    return ActionResult.success(_customer_to_entity(node)), summary="Customer retrieved."
+    return ActionResult.success(_customer_to_entity(node), summary="Customer retrieved.")
 
 
 @chat.function(
