@@ -34,8 +34,7 @@ def _settings_button() -> ui.UINode:
     """The one required secondary entry point into the settings screen --
     always the last element at the bottom of the sidebar."""
     return ui.Button(
-        "App settings", variant="secondary", size="sm", full_width=True,
-        icon="settings", on_click=ui.Call("__panel__shopify_settings"),
+        "App settings", variant="secondary", size="sm", icon="settings", on_click=ui.Call("__panel__shopify_settings"),
     )
 
 
@@ -68,6 +67,9 @@ def _connect_section() -> ui.UINode:
         ui.Button("How do I set this up?", variant="ghost", size="sm",
                   icon="HelpCircle",
                   on_click=ui.Call("__panel__shopify_connect_help")),
+        ui.Button("Connect Shopify Store (OAuth)", variant="primary", size="sm", icon="login"),
+        ui.Divider(),
+        ui.Text("Or connect via Admin API Access Token", variant="caption"),
         ui.Form(
             action="connect_shopify",
             submit_label="Verify and connect",
@@ -124,8 +126,7 @@ async def shopify_connect_panel(ctx, **kwargs) -> object:
         _connections_section(connections),
         *summary_rows,
         ui.Divider(),
-        ui.Button("View orders", variant="primary", size="sm", full_width=True,
-                  icon="ShoppingCart", on_click=ui.Call("__panel__shopify_center")),
+        ui.Button("View orders", variant="primary", size="sm", icon="ShoppingCart", on_click=ui.Call("__panel__shopify_center")),
         ui.Divider(),
         _connect_section(),
         ui.Divider(),
